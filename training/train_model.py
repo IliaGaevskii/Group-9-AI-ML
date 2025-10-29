@@ -1,4 +1,3 @@
-import sys
 
 import psutil
 from tensorboard.backend.event_processing.event_accumulator import EventAccumulator
@@ -106,7 +105,7 @@ def main():
 
     try:
         process = subprocess.Popen(
-            ["mlagents-learn",config_path,"--run-id",run_id,"--torch-device","cpu",command],
+            ["mlagents-learn",config_path,"--run-id",run_id,"--torch-device","cpu",command,"--no-graphics"],
             stdout=subprocess.PIPE,stderr=subprocess.STDOUT,text=True
         )
 
