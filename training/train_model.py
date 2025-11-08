@@ -20,7 +20,7 @@ TAGS = {
     "Losses/Policy Loss": "Mean Policy Loss",
     "Losses/Value Loss": "Mean Value Loss",
     "Policy/Entropy": "Mean Entropy",
-    "Self-play":"ELO"
+    "Self-play/ELO":"ELO"
 }
 
 
@@ -58,6 +58,7 @@ def get_training_metrics(path,run_id):
     tfevent = find_latest_events(path,run_id)
     event_acc = EventAccumulator(tfevent)
     event_acc.Reload()
+    print(event_acc.scalars.Keys())
     metrics = {"run id": run_id}
     for tag,label in TAGS.items():
         try:
