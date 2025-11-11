@@ -1,7 +1,6 @@
-import psutil
 from tensorboard.backend.event_processing.event_accumulator import EventAccumulator
+import psutil
 import numpy as np
-import pandas as pd
 import subprocess
 import threading
 import yaml
@@ -9,6 +8,8 @@ import glob
 import time
 import argparse
 import os
+import json
+import socket
 
 CONFIG_FILE = "config/poca/SoccerTwos.yaml"
 ENV_FILE = "env/SoccerTwos/UnityEnvironment.exe"
@@ -20,7 +21,6 @@ TAGS = {
     "Policy/Entropy": "Mean Entropy",
     "Self-play/ELO":"ELO"
 }
-
 
 def get_hardware_metrics(stop_event,process,interval=1):
     cpu_values = []
@@ -49,7 +49,6 @@ def find_latest_events(path,run_id, recursive = True):
     latest_event = max(tfevents_files, key=os.path.getctime)
     return latest_event
 
-
 def get_training_metrics(path,run_id):
     tfevent = find_latest_events(path,run_id)
     event_acc = EventAccumulator(tfevent)
@@ -67,11 +66,60 @@ def get_training_metrics(path,run_id):
         if not event:
             metrics[label] = "N/A"
             continue
+
+
         steps = np.array([e.step for e in event])
         total_steps = steps[-1]
         values = np.array([e.value for e in event])
         metrics[label] = np.mean(values)
+        if tag == "Environment/Cumulative Reward":
+            metrics["Cumulative Reward"] = values[-1]
     return metrics,total_steps
+
+def save_data(run_id,metrics,total_steps,cpu_usage,ram_usage,total_time,config_data):
+    data = {}
+    data['run_id'] = run_id
+    data["env_name"] = "SoccerTwos"
+    data["algorithm"] = config_data["behaviors"]["SoccerTwos"]["trainer_type"]
+    data["total_steps"] = int(total_steps)
+    data["learning_rate"] = config_data["behaviors"]["SoccerTwos"]["hyperparameters"]["learning_rate"]
+    data["epoch"] = config_data["behaviors"]["SoccerTwos"]["hyperparameters"]["num_epoch"]
+    data["bath_size"] = config_data["behaviors"]["SoccerTwos"]["hyperparameters"]["batch_size"]
+    data["buffer_size"] = config_data["behaviors"]["SoccerTwos"]["hyperparameters"]["buffer_size"]
+    data["gamma"] = config_data["behaviors"]["SoccerTwos"]["reward_signals"]["extrinsic"]["gamma"]
+    data["lambda"] = config_data["behaviors"]["SoccerTwos"]["hyperparameters"]["lambd"]
+    data["mean_reward"] = metrics["Mean Policy Reward"]
+    data["cumulative_reward"] = metrics["Cumulative Reward"]
+    data["episode_length"] = metrics["Episode Length"]
+    data["mean_policy_loss"] = metrics["Mean Policy Loss"]
+    data["mean_value_loss"] = metrics["Mean Value Loss"]
+    data["mean_entropy"] = metrics["Mean Entropy"]
+    data["ELO"] = metrics["ELO"]
+    data["training_time"] = total_time
+    data["mean_cpu_usage"] = cpu_usage
+    data["mean_ram_usage"] = ram_usage
+    data["efficiency_score"] = data["mean_reward"]/total_time
+    create_json_file(data)
+    return data
+
+def create_json_file(data):
+    hostname = socket.gethostname()
+    run_id = data["run_id"]
+    file_name = f"{run_id}-{time.time()}.json"
+    os.makedirs(f"data/{hostname}",exist_ok=True)
+    print("[INFO] Saving data...")
+    with open(f"data/{hostname}/{file_name}",'w') as f:
+        json.dump(data,f,indent=4)
+    print("[INFO] Saving success!")
+
+def get_config_datas(config_path):
+    config_datas = {}
+    try:
+        with open(config_path, "r") as f:
+            config_datas = yaml.safe_load(f)
+    except FileNotFoundError:
+        print("[ERROR] Config file not found")
+    return config_datas
 
 def main():
     parser = argparse.ArgumentParser()
@@ -88,13 +136,6 @@ def main():
     print(f"[INFO] Start training ML-Agents")
     print(f"[INFO] Run ID: {run_id}")
     print(f"[INFO] Config: {config_path}")
-
-    config_datas = {}
-    try:
-        with open(config_path, "r") as f:
-            config_datas = yaml.safe_load(f)
-    except FileNotFoundError:
-        print("[ERROR] Config file not found")
 
     start_time = time.time()
     stop_event = threading.Event()
@@ -135,13 +176,12 @@ def main():
 
     total_time = time.time() - start_time
     mean_cpu, mean_ram, time_elapsed = result["hardware_metrics"]
+    config_datas = get_config_datas(config_path)
 
     tensor_data_path = os.path.abspath(os.path.join(os.path.dirname(__file__), "..","results"))
     metrics,total_steps = get_training_metrics(tensor_data_path,run_id)
-    print(metrics)
-    print(total_steps)
-    print(f"CPU Usage (%): {mean_cpu}")
-    print(f"RAM Usage (MB): {mean_ram}")
+
+    data = save_data(run_id,metrics,total_steps,mean_cpu,mean_ram,total_time,config_datas)
 
 if __name__ == "__main__":
     main()

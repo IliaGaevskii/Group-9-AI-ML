@@ -1,9 +1,11 @@
 import firebase_credential
 from firebase_admin import firestore
+import socket
 
-firebase_credential.verify_credentials()
+firebase_credential.verify()
 
 db = firestore.client()
-doc_ref = db.collection("training_data").document("in_training")
-doc = doc_ref.get()
-print(doc.to_dict())
+collection = db.collection("training_data")
+print(socket.gethostname())
+
+
