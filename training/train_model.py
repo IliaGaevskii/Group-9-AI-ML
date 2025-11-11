@@ -1,19 +1,17 @@
-
 import psutil
 from tensorboard.backend.event_processing.event_accumulator import EventAccumulator
 import numpy as np
 import pandas as pd
 import subprocess
 import threading
-import os
 import yaml
-import csv
 import glob
 import time
 import argparse
+import os
 
 CONFIG_FILE = "config/poca/SoccerTwos.yaml"
-TOTAL_STEPS = 500000
+ENV_FILE = "env/SoccerTwos/UnityEnvironment.exe"
 TAGS = {
     "Environment/Cumulative Reward": "Mean Policy Reward",
     "Environment/Episode Length":"Episode Length",
@@ -24,21 +22,19 @@ TAGS = {
 }
 
 
-def get_hardware_metrics(stop_event,interval=1):
+def get_hardware_metrics(stop_event,process,interval=1):
     cpu_values = []
     ram_values = []
     start_time = time.time()
-    process = psutil.Process(os.getpid())
+    p = psutil.Process(process.pid)
     while not stop_event.is_set():
-        cpu_percentage = process.cpu_percent(interval=interval)
-        ram_usage = process.memory_info().rss / (1024 * 1024)
+        cpu_percentage = p.cpu_percent(interval=interval)
+        ram_usage = p.memory_info().rss / (1024 * 1024)
         cpu_values.append(cpu_percentage)
         ram_values.append(ram_usage)
     time_elapsed = time.time() - start_time
     mean_cpu = sum(cpu_values) / len(cpu_values)
     mean_ram = sum(ram_values) / len(ram_values)
-    print(f"CPU Usage (%): {mean_cpu}")
-    print(f"RAM Usage (MB): {mean_ram}")
     return mean_cpu, mean_ram, time_elapsed
 
 def find_latest_events(path,run_id, recursive = True):
@@ -58,8 +54,9 @@ def get_training_metrics(path,run_id):
     tfevent = find_latest_events(path,run_id)
     event_acc = EventAccumulator(tfevent)
     event_acc.Reload()
-    print(event_acc.scalars.Keys())
+    #print(event_acc.scalars.Keys())
     metrics = {"run id": run_id}
+    total_steps = 0
     for tag,label in TAGS.items():
         try:
             event = event_acc.Scalars(tag)
@@ -71,21 +68,22 @@ def get_training_metrics(path,run_id):
             metrics[label] = "N/A"
             continue
         steps = np.array([e.step for e in event])
+        total_steps = steps[-1]
         values = np.array([e.value for e in event])
         metrics[label] = np.mean(values)
-    return metrics
+    return metrics,total_steps
 
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--config", default=CONFIG_FILE)
     parser.add_argument("--run-id",required=True)
-    parser.add_argument("--num-steps",default=TOTAL_STEPS)
     parser.add_argument("--command",default="force")
+    parser.add_argument("--env",default=ENV_FILE)
     args = parser.parse_args()
     run_id = args.run_id
-    num_steps = args.num_steps
     config_path = args.config
-    command = "--" + args.command
+    env_path = args.env
+    command = args.command
 
     print(f"[INFO] Start training ML-Agents")
     print(f"[INFO] Run ID: {run_id}")
@@ -105,22 +103,29 @@ def main():
     result = {}
 
     try:
-        process = subprocess.Popen(
-            ["mlagents-learn",config_path,"--run-id",run_id,"--torch-device","cpu",command,"--no-graphics"],
-            stdout=subprocess.PIPE,stderr=subprocess.STDOUT,text=True
-        )
-
+        cmd = [
+            "mlagents-learn ",
+            config_path,
+            f"--run-id={run_id}",
+            "--torch-device=cpu",
+            f"--{command}",
+            "--no-graphics",
+            f"--env={env_path}"
+        ]
+        process = subprocess.Popen(cmd, stdout=subprocess.PIPE,stderr=subprocess.STDOUT,text=True)
         def worker():
-            result["hardware_metrics"] = get_hardware_metrics(stop_event)
+            result["hardware_metrics"] = get_hardware_metrics(stop_event,process)
         hardware_spec_thread = threading.Thread(target=worker)
         hardware_spec_thread.start()
-
         for line in iter(process.stdout.readline, ''):
             print(line,end="")
         process.wait()
 
     except KeyboardInterrupt:
         if process:
+            stop_event.set()
+            if hardware_spec_thread:
+                hardware_spec_thread.join()
             process.terminate()
             try:
                 process.wait(timeout=5)
@@ -128,15 +133,15 @@ def main():
                 process.kill()
         print("[INFO] Training Shutdown")
 
-    stop_event.set()
-    if hardware_spec_thread:
-        hardware_spec_thread.join()
     total_time = time.time() - start_time
     mean_cpu, mean_ram, time_elapsed = result["hardware_metrics"]
 
     tensor_data_path = os.path.abspath(os.path.join(os.path.dirname(__file__), "..","results"))
-    metrics = get_training_metrics(tensor_data_path,run_id)
+    metrics,total_steps = get_training_metrics(tensor_data_path,run_id)
     print(metrics)
+    print(total_steps)
+    print(f"CPU Usage (%): {mean_cpu}")
+    print(f"RAM Usage (MB): {mean_ram}")
 
 if __name__ == "__main__":
     main()
