@@ -1,10 +1,11 @@
 import firebase_admin
 from firebase_admin import credentials
-from firebase_admin import firestore
 
-key = ".firebase-venv/api_key.json"
+KEY = ".firebase-venv/api_key.json"
 
-if __name__ == "__main__":
+def verify_credentials(key=KEY):
     cred = credentials.Certificate(key)
     firebase_admin.initialize_app(cred)
+
+
 
