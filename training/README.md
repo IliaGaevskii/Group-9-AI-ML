@@ -5,7 +5,7 @@ Setup virtual environment and install all required libs
 python -m venv .ml-agents-venv
 .ml-agents-venv/Scripts/activate (for windows)
 source .ml-agents-venv/bin/activate (for mac)
-pip install ml_agents_requirements.txt
+pip install -r ml_agents_requirements.txt
 ```
 
 ## Start training
