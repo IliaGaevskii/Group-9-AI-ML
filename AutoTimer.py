@@ -23,7 +23,7 @@ def handle_SIGINT():
         parts = line.split(maxsplit=1)
         if parts and parts[0].isdigit():
             pid = int(parts[0])
-            os.kill(pid,signal.SIGINT)
+            os.kill(pid,signal.SIGTERM)
 
 # Method to handle commiting new .json and run_log data
 #def handle_GIT():
