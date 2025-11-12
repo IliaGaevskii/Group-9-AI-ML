@@ -35,18 +35,18 @@ def get_hardware_metrics(stop_event, process, interval=1):
 
     while not stop_event.is_set():
         try:
-            # Check if process is still running
-            if process.poll() is not None:  # Process finished
+
+            if process.poll() is not None:
                 break
 
-            # Use non-blocking call with small sleep for responsiveness
-            cpu_percentage = p.cpu_percent(interval=None)  # non-blocking instant value
-            ram_usage = p.memory_info().rss / (1024 * 1024)  # in MB
+
+            cpu_percentage = p.cpu_percent(interval=None)
+            ram_usage = p.memory_info().rss / (1024 * 1024)
 
             cpu_values.append(cpu_percentage)
             ram_values.append(ram_usage)
 
-            time.sleep(interval)  # sleep outside cpu_percent to avoid delayed exit
+            time.sleep(interval)
         except psutil.NoSuchProcess:
             print("[WARNING] Process ended during metric collection")
             break
