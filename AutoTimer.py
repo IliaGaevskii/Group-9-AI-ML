@@ -43,7 +43,7 @@ def main():
     repo = Repo(path_to_repo)
     handle_SIGINT()
 
-    print(repo.git.status())
+    #print(repo.git.status())
 
 
 if __name__ == '__main__':
