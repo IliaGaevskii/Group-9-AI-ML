@@ -10,8 +10,6 @@ import argparse
 import os
 import json
 import socket
-import sys
-import signal
 
 CONFIG_FILE = "config/poca/SoccerTwos.yaml"
 ENV_FILE = "env/SoccerTwos/UnityEnvironments.x86_64"
@@ -137,6 +135,9 @@ def create_json_file(data):
     hostname = socket.gethostname()
     run_id = data["run_id"]
     file_name = f"{run_id}-{time.time()}.json"
+
+    if hostname=='test-vlad':
+        hostname = 'server'
     os.makedirs(f"data/{hostname}",exist_ok=True)
     print("[INFO] Saving data...")
     with open(f"data/{hostname}/{file_name}",'w') as f:
