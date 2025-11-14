@@ -22,20 +22,23 @@ TAGS = {
     "Self-play/ELO":"ELO"
 }
 
-def get_hardware_metrics(stop_event,process,interval=1):
+def get_hardware_metrics(stop_event,p,interval=1):
     cpu_values = []
     ram_values = []
     start_time = time.time()
-    p = psutil.Process(process.pid)
     while not stop_event.is_set():
-        cpu_percentage = p.cpu_percent(interval=interval)
-        ram_usage = p.memory_info().rss / (1024 * 1024)
-        cpu_values.append(cpu_percentage)
-        ram_values.append(ram_usage)
+        try:
+            cpu_percentage = p.cpu_percent(interval=interval)
+            ram_usage = p.memory_info().rss / (1024 ** 2)  # MB
+            cpu_values.append(cpu_percentage)
+            ram_values.append(ram_usage)
+        except psutil.NoSuchProcess:
+            print("[WARNING] Monitored process ended; stopping hardware metrics collection.")
+            break
     time_elapsed = time.time() - start_time
     mean_cpu = sum(cpu_values) / len(cpu_values)
     mean_ram = sum(ram_values) / len(ram_values)
-    return mean_cpu, mean_ram, time_elapsed
+    return  mean_cpu, mean_ram, time_elapsed
 
 def find_latest_events(path,run_id, recursive = True):
     pattern = '**/events.out.tfevents.*' if recursive else 'events.out.tfevents*'
@@ -66,8 +69,6 @@ def get_training_metrics(path,run_id):
         if not event:
             metrics[label] = "N/A"
             continue
-
-
         steps = np.array([e.step for e in event])
         total_steps = steps[-1]
         values = np.array([e.value for e in event])
@@ -127,11 +128,13 @@ def main():
     parser.add_argument("--run-id",required=True)
     parser.add_argument("--command",default="force")
     parser.add_argument("--env",default=ENV_FILE)
+    parser.add_argument("--base-port",default=5005)
     args = parser.parse_args()
     run_id = args.run_id
     config_path = args.config
     env_path = args.env
     command = args.command
+    port = args.base_port
 
     print(f"[INFO] Start training ML-Agents")
     print(f"[INFO] Run ID: {run_id}")
@@ -151,11 +154,13 @@ def main():
             "--torch-device=cpu",
             f"--{command}",
             "--no-graphics",
-            f"--env={env_path}"
+            f"--env={env_path}",
+            f"--base-port={port}",
         ]
         process = subprocess.Popen(cmd, stdout=subprocess.PIPE,stderr=subprocess.STDOUT,text=True)
         def worker():
-            result["hardware_metrics"] = get_hardware_metrics(stop_event,process)
+            p = psutil.Process(process.pid)
+            result["hardware_metrics"] = get_hardware_metrics(stop_event,p)
         hardware_spec_thread = threading.Thread(target=worker)
         hardware_spec_thread.start()
         for line in iter(process.stdout.readline, ''):
@@ -165,13 +170,16 @@ def main():
     except KeyboardInterrupt:
         if process:
             stop_event.set()
-            if hardware_spec_thread:
-                hardware_spec_thread.join()
+            hardware_spec_thread.join()
             process.terminate()
             try:
                 process.wait(timeout=5)
             except subprocess.TimeoutExpired:
                 process.kill()
+    finally:
+        if process.poll() is not None:
+            stop_event.set()
+            hardware_spec_thread.join()
         print("[INFO] Training Shutdown")
 
     total_time = time.time() - start_time
