@@ -5,20 +5,29 @@ Setup virtual environment and install all required libs
 python -m venv .ml-agents-venv
 .ml-agents-venv/Scripts/activate (for windows)
 source .ml-agents-venv/bin/activate (for mac)
-pip3 install torch~=1.13.1 -f https://download.pytorch.org/whl/torch_stable.html
+pip install "torch==2.1.1+cu118" "torchvision==0.16.1+cu118" "torchaudio==2.1.1+cu118" -f https://download.pytorch.org/whl/torch_stable.html
 python -m pip install ./ml-agents-envs
 python -m pip install ./ml-agents
-pip install psutil
 ```
 
 ## Start training
+
+### Env: SoccerTwos
 Open terminal and run this command
 ```commandline
-python train_model.py --run-id [run id]
+python train_SCT.py --run-id [run id]
 ```
 Argument
-- --config: set yaml file for environment (default: SoccerTwos)
 - --run-id: run id
-- --command: "resume" or "force" (default: force) 
-- --env: "environment" (default: SoccerTwos)
+- --command: "resume" or "force" (default: force)
+- --base-port: set different port to run multi-processes (default: 5005)
+
+### Env: StrikersVsGoalie
+Open terminal and run this command
+```commandline
+python train_SKG.py --run-id [run id]
+```
+Argument
+- --run-id: run id
+- --command: "resume" or "force" (default: force)
 - --base-port: set different port to run multi-processes (default: 5005)
