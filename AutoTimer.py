@@ -79,15 +79,16 @@ def stop_time_check():
 def main():
 
     handle_STARTUP()
+    try:
+        while True:
+            if stop_time_check():
+                handle_SIGINT()
+                handle_GIT()
+                handle_STARTUP()
 
-    while True:
-        if stop_time_check():
-            handle_SIGINT()
-            handle_GIT()
-            handle_STARTUP()
-
-        time.sleep(1)
-
+                time.sleep(1)
+    except KeyboardInterrupt:
+        print("Stopping run...")
 
 if __name__ == '__main__':
     main()
