@@ -132,12 +132,9 @@ def save_data(run_id,metrics,total_steps,cpu_usage,ram_usage,total_time,config_d
     return data
 
 def create_json_file(data):
-    hostname = socket.gethostname()
+    hostname = 'server'
     run_id = data["run_id"]
     file_name = f"{run_id}-{time.time()}.json"
-
-    if hostname=='test-vlad':
-        hostname = 'server'
     os.makedirs(f"data/{hostname}",exist_ok=True)
     print("[INFO] Saving data...")
     with open(f"data/{hostname}/{file_name}",'w') as f:
