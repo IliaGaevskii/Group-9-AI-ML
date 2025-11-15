@@ -12,7 +12,7 @@ from git import Repo
 import pytz
 import sys
 
-path_to_repo = '~/Group-9-AI-ML'
+path_to_repo = '/home/vlad/PycharmProjects/Group-9-AI-ML'
 run_id = 0
 path_to_data = 'data/server'
 timezone = pytz.timezone('Europe/Amsterdam')
@@ -60,13 +60,13 @@ def handle_STARTUP():
     run_id = file_counter() + 1
 
     try:
-        if os.getcwd() == 'Group-9-AI-ML':
-            p = subprocess.Popen(['conda','run','-n','mlagents','python',path_to_training,'--run-id',str(run_id)], stdout=subprocess.PIPE, stderr=subprocess.STDOUT,universal_newlines=True,bufsize=1)
-            for line in p.stdout:
-                sys.stdout.write(line)
-            p.wait()
-            if stop_time_check():
-                return
+        print("Starting run...")
+        p = subprocess.Popen(['conda','run','-n','mlagents','python',path_to_training,'--run-id',str(run_id)], stdout=subprocess.PIPE,stderr=subprocess.STDOUT,text=True)
+        for line in iter(p.stdout.readline,''):
+           print(line,end="")
+        p.wait()
+        if stop_time_check():
+           return
     except KeyboardInterrupt:
         handle_SIGINT()
 
