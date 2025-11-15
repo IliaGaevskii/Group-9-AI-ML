@@ -6,10 +6,13 @@ import subprocess
 import os
 import signal
 import datetime
+import time
+
 from git import Repo
 import pytz
+import sys
 
-path_to_repo = os.getcwd()
+path_to_repo = '~/Group-9-AI-ML'
 run_id = 0
 path_to_data = 'data/server'
 timezone = pytz.timezone('Europe/Amsterdam')
@@ -55,9 +58,17 @@ def handle_GIT():
 # Method to handle conda activate start up and ml agents learn
 def handle_STARTUP():
     run_id = file_counter() + 1
-    if os.getcwd() == 'Group-9-AI-ML':
-        subprocess.run(['conda','run','-n','mlagents','python',path_to_training,'--run-id',str(run_id)],check=True)
 
+    try:
+        if os.getcwd() == 'Group-9-AI-ML':
+            p = subprocess.Popen(['conda','run','-n','mlagents','python',path_to_training,'--run-id',str(run_id)], stdout=subprocess.PIPE, stderr=subprocess.STDOUT,universal_newlines=True,bufsize=1)
+            for line in p.stdout:
+                sys.stdout.write(line)
+            p.wait()
+            if stop_time_check():
+                return
+    except KeyboardInterrupt:
+        handle_SIGINT()
 
 
 def stop_time_check():
@@ -69,12 +80,13 @@ def main():
 
     handle_STARTUP()
 
-   # if stop_time_check():
-    #    handle_SIGINT() # Stops ml-agents learn execute
-    #    handle_GIT() # Commits and pushes results to repo
-     #   handle_STARTUP() # Restarts execution
+    while True:
+        if stop_time_check():
+            handle_SIGINT()
+            handle_GIT()
+            handle_STARTUP()
 
-    #print(repo.git.status())
+        time.sleep(1)
 
 
 if __name__ == '__main__':
