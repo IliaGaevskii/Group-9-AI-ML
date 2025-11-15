@@ -13,7 +13,7 @@ path_to_repo = os.getcwd()
 run_id = 0
 path_to_data = 'data/server'
 timezone = pytz.timezone('Europe/Amsterdam')
-ct = datetime.now(timezone)
+ct = datetime.datetime.now(timezone)
 repo = Repo(path_to_repo)
 path_to_training = 'training/linux_train_model.py'
 
@@ -30,10 +30,10 @@ def handle_SIGINT():
             pid = int(parts[0])
             os.kill(pid,signal.SIGTERM)
 
-def file_counter(run_id=0):
+def file_counter(init_run_id=0):
     for _,_,files in os.walk(path_to_data):
-        run_id += len(files)
-    return run_id
+        init_run_id += len(files)
+    return init_run_id
 
 # Method to handle commiting new .json and run_log data
 # TODO: Make method count how many runs are in the result folder and increment run counter based on that
@@ -43,8 +43,9 @@ def handle_GIT():
             for file in files:
                 filepath = os.path.relpath(os.path.join(root, file), path_to_repo)
                 repo.index.add([filepath])
-
         repo.index.commit("Server Auto-Commit: Added data from run number #" + str(run_id))
+        origin = repo.remote(name='origin')
+        origin.push()
     except Exception as e:
         print(f"Error: {e}")
 
@@ -53,8 +54,9 @@ def handle_GIT():
 
 # Method to handle conda activate start up and ml agents learn
 def handle_STARTUP():
-    file_counter()
-    subprocess.run(['conda','run','-n','mlagents','python',path_to_training,'--run-id',str(run_id+1)],check=True)
+    run_id = file_counter() + 1
+    if os.getcwd() == 'Group-9-AI-ML':
+        subprocess.run(['conda','run','-n','mlagents','python',path_to_training,'--run-id',str(run_id)],check=True)
 
 
 
@@ -65,12 +67,12 @@ def stop_time_check():
 
 def main():
 
-    handle_SIGINT()
+    handle_STARTUP()
 
-    if stop_time_check():
-        handle_SIGINT() # Stops ml-agents learn execute
-        handle_GIT() # Commits and pushes results to repo
-        handle_STARTUP() # Restarts execution
+   # if stop_time_check():
+    #    handle_SIGINT() # Stops ml-agents learn execute
+    #    handle_GIT() # Commits and pushes results to repo
+     #   handle_STARTUP() # Restarts execution
 
     #print(repo.git.status())
 
