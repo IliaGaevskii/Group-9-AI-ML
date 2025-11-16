@@ -13,6 +13,7 @@ CONFIG_FILE = "config/poca/SoccerTwos.yaml"
 ENV_FILE = "env/SoccerTwos/UnityEnvironment.exe"
 TAGS = {
     "Environment/Group Cumulative Reward": "Mean Group Reward",
+    "Environment/Cumulative Reward": "Mean Reward",
     "Environment/Episode Length":"Episode Length",
     "Losses/Policy Loss": "Mean Policy Loss",
     "Losses/Value Loss": "Mean Value Loss",
