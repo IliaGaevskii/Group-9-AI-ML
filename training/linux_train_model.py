@@ -35,18 +35,18 @@ def get_hardware_metrics(stop_event, process, interval=1):
 
     while not stop_event.is_set():
         try:
-
-            if process.poll() is not None:
+            # Check if process is still running
+            if process.poll() is not None:  # Process finished
                 break
 
-
-            cpu_percentage = p.cpu_percent(interval=None)
-            ram_usage = p.memory_info().rss / (1024 * 1024)
+            # Use non-blocking call with small sleep for responsiveness
+            cpu_percentage = p.cpu_percent(interval=None)  # non-blocking instant value
+            ram_usage = p.memory_info().rss / (1024 * 1024)  # in MB
 
             cpu_values.append(cpu_percentage)
             ram_values.append(ram_usage)
 
-            time.sleep(interval)
+            time.sleep(interval)  # sleep outside cpu_percent to avoid delayed exit
         except psutil.NoSuchProcess:
             print("[WARNING] Process ended during metric collection")
             break
@@ -132,7 +132,7 @@ def save_data(run_id,metrics,total_steps,cpu_usage,ram_usage,total_time,config_d
     return data
 
 def create_json_file(data):
-    hostname = socket.gethostname()
+    hostname = 'server'
     run_id = data["run_id"]
     file_name = f"{run_id}-{time.time()}.json"
     os.makedirs(f"data/{hostname}",exist_ok=True)
@@ -149,6 +149,8 @@ def get_config_datas(config_path):
     except FileNotFoundError:
         print("[ERROR] Config file not found")
     return config_datas
+
+
 
 def main():
     parser = argparse.ArgumentParser()
@@ -202,20 +204,21 @@ def main():
             except subprocess.TimeoutExpired:
                 process.kill()
         print("[INFO] Training Shutdown")
+    finally:
 
-    total_time = time.time() - start_time
-    hardware_spec_thread.join()
-    try:
-        mean_cpu, mean_ram, time_elapsed = result["hardware_metrics"]
-    except KeyError:
-        mean_cpu, mean_ram, time_elapsed = (None, None, None)
-        print("[WARNING] No hardware metrics found")
-    config_datas = get_config_datas(config_path)
+        total_time = time.time() - start_time
+        hardware_spec_thread.join()
+        try:
+            mean_cpu, mean_ram, time_elapsed = result["hardware_metrics"]
+        except KeyError:
+            mean_cpu, mean_ram, time_elapsed = (None, None, None)
+            print("[WARNING] No hardware metrics found")
+        config_datas = get_config_datas(config_path)
 
-    tensor_data_path = os.path.abspath(os.path.join(os.path.dirname(__file__), "..","results"))
-    metrics,total_steps = get_training_metrics(tensor_data_path,run_id)
+        tensor_data_path = os.path.abspath(os.path.join(os.path.dirname(__file__), "..","results"))
+        metrics,total_steps = get_training_metrics(tensor_data_path,run_id)
 
-    data = save_data(run_id,metrics,total_steps,mean_cpu,mean_ram,total_time,config_datas)
+        data = save_data(run_id,metrics,total_steps,mean_cpu,mean_ram,total_time,config_datas)
 
 if __name__ == "__main__":
     main()

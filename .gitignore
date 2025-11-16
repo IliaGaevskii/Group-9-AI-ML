@@ -2,4 +2,6 @@
 .venv
 results/
 .idea
+dist
 Unity
+
