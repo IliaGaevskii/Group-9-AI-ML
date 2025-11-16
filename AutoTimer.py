@@ -1,7 +1,3 @@
-# Use pgrep -l mlagents - DONE
-# Use subprocess
-# Use os.kill SIGINT
-
 import subprocess
 import os
 import signal
