@@ -63,7 +63,7 @@ def get_training_metrics(path,run_id):
 def save_data(run_id,agent,metrics,total_steps,total_time,config_data):
     data = {}
     data['run_id'] = run_id
-    data["env_name"] = "SoccerTwos"
+    data["env_name"] = "StrikersVsGoalie"
     data["algorithm"] = config_data["behaviors"][agent]["trainer_type"]
     data["total_steps"] = int(total_steps)
     data["learning_rate"] = config_data["behaviors"][agent]["hyperparameters"]["learning_rate"]

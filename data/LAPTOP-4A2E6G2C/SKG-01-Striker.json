@@ -1,6 +1,6 @@
 {
     "run_id": "SKG-01",
-    "env_name": "SoccerTwos",
+    "env_name": "StrikersVsGoalie",
     "algorithm": "poca",
     "total_steps": 800000,
     "learning_rate": 0.0003,
