@@ -38,8 +38,6 @@ def file_counter(init_run_id=0):
     return init_run_id
 
 # Method to handle commiting new .json and run_log data
-# TODO: Make method count how many runs are in the result folder and increment run counter based on that
-
 def handle_GIT():
     global run_id
     try:
@@ -48,7 +46,7 @@ def handle_GIT():
         files_to_add = []
         for root, dirs, files in os.walk(path_to_data):
             for file in files:
-                if f"{run_id}" in file:  # Filter to just files related to current run_id
+                if f"{run_id}" in file: 
                     abs_file_path = os.path.join(root, file)
                     rel_file_path = os.path.relpath(abs_file_path, path_to_repo)
                     if os.path.exists(abs_file_path):
