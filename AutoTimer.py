@@ -47,17 +47,20 @@ def file_counter(init_run_id=0):
 def handle_GIT():
     global run_id
     try:
-        time.sleep(2)  # Pause 2 seconds to ensure file writes complete
+        time.sleep(2)  # pause to ensure file writes complete
 
+        files_to_add = []
         for root, dirs, files in os.walk(path_to_data):
             for file in files:
-                abs_file_path = os.path.join(root, file)
-                rel_file_path = os.path.relpath(abs_file_path, path_to_repo)
-                if os.path.exists(abs_file_path):
-                    print(f"Adding file: {rel_file_path}")
-                    repo.index.add([rel_file_path])
-                else:
-                    print(f"Missing file (skipped): {abs_file_path}")
+                if f"{run_id}" in file:  # Filter to just files related to current run_id
+                    abs_file_path = os.path.join(root, file)
+                    rel_file_path = os.path.relpath(abs_file_path, path_to_repo)
+                    if os.path.exists(abs_file_path):
+                        print(f"Adding file: {rel_file_path}")
+                        files_to_add.append(rel_file_path)
+
+        if files_to_add:
+            repo.index.add(files_to_add)
 
         if repo.is_dirty():
             repo.index.commit(f"Server Auto-Commit: Added data from run number #{run_id}")
@@ -66,6 +69,7 @@ def handle_GIT():
             origin.push()
         else:
             print("No changes detected; no commit made.")
+
     except Exception as e:
         print(f"Error during git handling: {e}")
 
@@ -87,12 +91,17 @@ def handle_STARTUP():
             print("Starting run...")
             global starttime
             starttime = datetime.datetime.now()
-        
+            p = subprocess.Popen(['conda','run','--no-capture-output','-n','mlagents','python','-u',path_to_training,'--run-id',str(run_id)],stdout=subprocess.PIPE,stderr=subprocess.STDOUT,text=True)
             while True:
-                p = subprocess.Popen(['conda','run','--no-capture-output','-n','mlagents','pyhton','-u',path_to_training,'--run-id',str(run_id)],stdout=subprocess.PIPE,stderr=subprocess.STDOUT,text=True)
-                #for line in iter(p.stdout.readline,''):
-                #    print(line,end="")
-                #p.wait()
+                #reads = [p.stdout.fileno()]
+                #ret = select.select(reads,[],[])
+                #if p.stdout.fileno() in ret[0]:
+                    #line = p.stdout.readline()
+                    #if line:
+                        #print(line,end='')
+                    #else:
+                        #break
+
             
                 if p.poll() is not None:
                     break
@@ -105,13 +114,7 @@ def handle_STARTUP():
                     print("Restarting due to time elapsed...")
                     break
 
-                if stop_time_check():
-                    handle_SIGINT()
-                    time.sleep(5)
-                    handle_GIT()
-                    print("Restarting due to stop time being reached(23:59 UTC+2)")
-                    break
-            
+                       
                 time.sleep(1)
 
             run_id = file_counter() + 1
@@ -121,19 +124,12 @@ def handle_STARTUP():
     except KeyboardInterrupt:
         handle_SIGINT()
 
-
-def stop_time_check():
-    now = datetime.datetime.now()
-    #print(f"Current time for stop check:{now}")
-    return now.hour == 23 and now.minute == 59
-
-
 def time_elapsed():
 
     now = datetime.datetime.now()
     elapsed = now - starttime
     #print(f"Checking elapsed time: {elapsed}")
-    return elapsed >= datetime.timedelta(hours=1,minutes=30)
+    return elapsed >= datetime.timedelta(hours=5)
 
 def main():
     handle_STARTUP()
