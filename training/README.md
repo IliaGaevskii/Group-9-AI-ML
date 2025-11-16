@@ -2,9 +2,15 @@
 ## Setup environment
 Setup virtual environment and install all required libs
 ```commandline
-python -m venv .ml-agents-venv
+python -m venv .ml-agents-venv (I recommend to use version 3.10.1)
+```
+```commandline
 .ml-agents-venv/Scripts/activate (for windows)
+```
+```commandline
 source .ml-agents-venv/bin/activate (for mac)
+```
+```commandline
 pip install "torch==2.1.1+cu118" "torchvision==0.16.1+cu118" "torchaudio==2.1.1+cu118" -f https://download.pytorch.org/whl/torch_stable.html
 python -m pip install ./ml-agents-envs
 python -m pip install ./ml-agents
