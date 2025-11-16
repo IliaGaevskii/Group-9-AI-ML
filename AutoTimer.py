@@ -133,7 +133,7 @@ def time_elapsed():
     now = datetime.datetime.now()
     elapsed = now - starttime
     #print(f"Checking elapsed time: {elapsed}")
-    return elapsed >= datetime.timedelta(minutes=5)
+    return elapsed >= datetime.timedelta(hours=1,minutes=30)
 
 def main():
     handle_STARTUP()
