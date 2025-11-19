@@ -22,7 +22,7 @@ python -m pip install ./ml-agents
 ### Env: SoccerTwos
 Open terminal and run this command
 ```commandline
-python train_SCT.py --run-id [run id]
+python training/train_SCT.py --run-id [run id]
 ```
 Argument
 - --run-id: run id
@@ -32,7 +32,7 @@ Argument
 ### Env: StrikersVsGoalie
 Open terminal and run this command
 ```commandline
-python train_SKG.py --run-id [run id]
+python training/train_SKG.py --run-id [run id]
 ```
 Argument
 - --run-id: run id
