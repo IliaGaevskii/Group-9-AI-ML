@@ -77,14 +77,13 @@ def sigint_handler(signum,frame):
 
 # Method to handle conda activate start up and ml agents learn
 def handle_STARTUP():
-    global run_id
+    global run_id,starttime
     run_id = file_counter() + 1
+    starttime = datetime.datetime.now()    
 
     try:
         while True:
             print("Starting run...")
-            global starttime
-            starttime = datetime.datetime.now()
             p = subprocess.Popen(['conda','run','--no-capture-output','-n','mlagents','python','-u',path_to_training,'--run-id',str(run_id)],stdout=subprocess.PIPE,stderr=subprocess.STDOUT,text=True)
             while True:
                 #reads = [p.stdout.fileno()]
@@ -122,8 +121,9 @@ def time_elapsed():
 
     now = datetime.datetime.now()
     elapsed = now - starttime
-    #print(f"Checking elapsed time: {elapsed}")
+    print(f"Checking elapsed time: {elapsed}")
     return elapsed >= datetime.timedelta(hours=5)
+    #return elapsed >= datetime.timedelta(minutes=5)
 
 def main():
     handle_STARTUP()
