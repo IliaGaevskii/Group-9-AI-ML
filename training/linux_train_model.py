@@ -10,7 +10,7 @@ import json
 import socket
 
 CONFIG_FILE = "config/poca/SoccerTwos.yaml"
-ENV_FILE = "env/SoccerTwos/UnityEnvironment.x86_64"
+ENV_FILE = "env/SoccerTwos/UnityEnvironments.x86_64"
 TAGS = {
     "Environment/Group Cumulative Reward": "Mean Group Reward",
     "Environment/Cumulative Reward": "Mean Reward",
@@ -83,7 +83,7 @@ def save_data(run_id,metrics,total_steps,total_time,config_data):
     return data
 
 def create_json_file(data):
-    hostname = socket.gethostname()
+    hostname = 'server'
     run_id = data["run_id"]
     file_name = f"{run_id}.json"
     os.makedirs(f"data/{hostname}",exist_ok=True)
@@ -120,10 +120,10 @@ def main():
 
     try:
         cmd = [
-            "mlagents-learn ",
+            "mlagents-learn",
             CONFIG_FILE,
             f"--run-id={run_id}",
-            # "--torch-device=cpu", # activate this if you want to use cpu instead of gpu
+            "--torch-device=cpu", # activate this if you want to use cpu instead of gpu
             f"--{command}",
             "--no-graphics",
             f"--env={ENV_FILE}",
