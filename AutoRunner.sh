@@ -19,6 +19,8 @@ while true; do
 			trap 'exit' SIGINT
 			conda run --no-capture-output -n mlagents python -u training/linux_train_model.py --run-id $run_id" 
 
+	git add data/server/*.json
+
 	# Commit logic
 	if ! git diff --cached --quiet ; then 
 		git commit -m "Server Auto-Commit : Added training results from run #$run_id"
