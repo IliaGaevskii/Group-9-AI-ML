@@ -1,5 +1,7 @@
 #!/bin/bash
 
+
+# SIGINT trap to kill mlagents and AutoRunner on ^C signal
 control_c(){
     	pkill mlagents-learn
 	if [ -n "$PID" ]; then
@@ -24,7 +26,7 @@ while true; do
 	if [[ $? -eq 0 ]] ; then # Checks if process is finished, commit logic
 		git add data/server/*.json
 
-		if ! git diff --cached --quiet ; then 
+		if ! git diff --cached --quiet ; then # checks if any file has been added to staging
 			git commit -m "Server Auto-Commit : Added training results from run #$run_id"
 			git pull --rebase
 			git push
@@ -33,5 +35,6 @@ while true; do
 			echo "No changes to commit for run_id $run_id"
 		fi
 	fi
+
 	sleep 10
 done
