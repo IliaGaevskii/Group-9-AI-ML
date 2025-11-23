@@ -17,7 +17,7 @@ while true; do
 
 	run_id=$(($(find data/server -type f | wc -l) + 1))
 
-	timeout --foreground 5m bash -c "
+	timeout --foreground 5h bash -c "
 			trap 'exit' SIGINT
 			conda run --no-capture-output -n mlagents python -u training/linux_train_model.py --run-id $run_id" 
 
