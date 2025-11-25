@@ -1,0 +1,21 @@
+{
+    "run_id": "SCT-40",
+    "env_name": "SoccerTwos",
+    "algorithm": "poca",
+    "total_steps": 400000,
+    "learning_rate": 0.0003,
+    "epoch": 3,
+    "bath_size": 2048,
+    "buffer_size": 20480,
+    "gamma": 0.99,
+    "lambda": 0.95,
+    "mean_group_reward": -0.05729446642770909,
+    "group_cumulative_reward": -0.10000000149011612,
+    "episode_length": 873.4272952196075,
+    "mean_policy_loss": 0.017161485788069274,
+    "mean_value_loss": 0.0018471593380845182,
+    "mean_entropy": 3.2327323018050773,
+    "ELO": 1197.0548095703125,
+    "training_time": 5414.009315252304,
+    "efficiency_score": -1.0582631667496319e-05
+}
