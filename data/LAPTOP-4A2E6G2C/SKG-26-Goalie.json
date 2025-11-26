@@ -1,0 +1,22 @@
+{
+    "run_id": "SKG-26",
+    "env_name": "StrikersVsGoalie",
+    "algorithm": "poca",
+    "total_steps": 830000,
+    "learning_rate": 0.0003,
+    "epoch": 3,
+    "bath_size": 2048,
+    "buffer_size": 20480,
+    "gamma": 0.99,
+    "lambda": 0.95,
+    "mean_reward": 0.5965113603925131,
+    "mean_group_reward": -0.5447312382509909,
+    "cumulative_reward": 0.16607144474983215,
+    "episode_length": 600.7226791381836,
+    "mean_policy_loss": 0.016927199605374765,
+    "mean_value_loss": 0.010209430212107224,
+    "mean_entropy": 3.1637654419404915,
+    "ELO": 1082.6020765189664,
+    "training_time": 3888.99959564209,
+    "efficiency_score": 0.00015338426907036655
+}
