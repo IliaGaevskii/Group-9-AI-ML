@@ -5,3 +5,6 @@ results/
 dist
 Unity
 venv/
+env
+*.pyc
+
